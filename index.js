@@ -1,8 +1,9 @@
-
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { MongoClient } from 'mongodb';
+import jobsRoutes from './routes/jobs.routes.js';
+import companyRoutes from './routes/company.routes.js';
 
 dotenv.config();
 
@@ -12,29 +13,36 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
-// Start server after successful database connection
 const PORT = process.env.PORT || 5000;
-
 const client = new MongoClient(process.env.MONGO_DB_URI);
-export async function connectToMongoDB() {
+
+async function startServer() {
   try {
+    // 1. Connect to MongoDB
     await client.connect();
-    console.log("You successfully connected to MongoDB!");
-    return client;
+    console.log("Successfully connected to MongoDB!");
+
+    const database = client.db("hireloop_db");
+    const jobsCollection = database.collection("jobs");
+    const companyCollection = database.collection("companies")
+
+    // 2. Register Routes AFTER database connection is ready
+    app.use("/api/jobs", jobsRoutes(jobsCollection));
+    app.use("/api/companies", companyRoutes(companyCollection));
+
+    app.get('/', (req, res) => {
+      res.send('Server running successfully');
+    });
+
+    // 3. Start Express server ONLY after routes are mounted
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
   } catch (err) {
-    console.dir(err);
+    console.error("Failed to connect to MongoDB:", err);
+    process.exit(1);
   }
 }
-// Call this only when your application terminates
-export async function disconnectFromMongoDB() {
-//   await client.close();
-}
 
- app.get('/', (req, res)=> {
-    res.send('hello world')
- })
-
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+// Initialize application
+startServer();
