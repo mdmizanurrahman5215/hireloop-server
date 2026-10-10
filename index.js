@@ -28,7 +28,7 @@ async function startServer() {
 
     // 2. Register Routes AFTER database connection is ready
     app.use("/api/jobs", jobsRoutes(jobsCollection));
-    app.use("/api/companies", companyRoutes(companyCollection));
+    app.use("/api/my/companies", companyRoutes(companyCollection));
 
     app.get('/', (req, res) => {
       res.send('Server running successfully');

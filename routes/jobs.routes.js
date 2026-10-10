@@ -150,6 +150,60 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
+
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Check if ID exists and basic string check
+    if (!id || typeof id !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required",
+      });
+    }
+
+    // 2. Exact 24-character hex string validation for BSON ObjectId
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+
+    let query = {};
+    if (isValidObjectId) {
+    
+      query = {
+        $or: [{ _id: new ObjectId(id) }, { _id: id }],
+      };
+    } else {
+    
+      query = { _id: id };
+    }
+
+    // 3. Database query
+    const job = await jobsCollection.findOne(query);
+
+    // 4. If job not found
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: `Job not found with ID: ${id}`,
+      });
+    }
+
+    // 5. Successful Response
+    return res.status(200).json({
+      success: true,
+      data: job,
+    });
+  } catch (error) {
+    console.error("Error fetching job by ID:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch job",
+      error: error.message,
+    });
+  }
+});
+
     
   router.post("/", async (req, res) => {
     try {
