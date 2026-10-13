@@ -204,6 +204,89 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+router.put("/:id", async (req, res) => {
+    try {
+      const jobId = req.params.id;
+      const payload = req.body;
+
+      // 1. Validate ID
+      if (!ObjectId.isValid(jobId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid job ID format.",
+        });
+      }
+
+      // 2. Basic validation for required fields
+      if (!payload.title || !payload.companyId) {
+        return res.status(400).json({
+          success: false,
+          message: "Title and Company ID are required fields.",
+        });
+      }
+
+      // 3. Prepare updated document fields
+      const updatedJobData = {
+        title: payload.title,
+        category: payload.category || "",
+        jobType: payload.jobType || "",
+        salary: {
+          min: Number(payload.salary?.min) || 0,
+          max: Number(payload.salary?.max) || 0,
+          currency: payload.salary?.currency || "BDT",
+        },
+        location: {
+          city: payload.location?.remote ? "" : payload.location?.city || "",
+          country: payload.location?.remote ? "" : payload.location?.country || "",
+          remote: Boolean(payload.location?.remote),
+        },
+        applicationDeadline: payload.applicationDeadline ? new Date(payload.applicationDeadline) : null,
+        description: {
+          responsibilities: payload.description?.responsibilities || "",
+          requirements: payload.description?.requirements || "",
+          benefits: payload.description?.benefits || "",
+        },
+        companyId: ObjectId.isValid(payload.companyId) ? new ObjectId(payload.companyId) : payload.companyId,
+        companyName: payload.companyName || "",
+        companyLogo: payload.companyLogo || "",
+        userId: payload.userId || "",
+        status: payload.status || "active",
+        updatedAt: new Date(), 
+      };
+
+
+      const result = await jobsCollection.findOneAndUpdate(
+        { _id: new ObjectId(jobId) },
+        { $set: updatedJobData },
+        { returnDocument: "after" } 
+      );
+
+      if (!result || (result.value === null && !result._id)) {
+        return res.status(404).json({
+          success: false,
+          message: "Job not found.",
+        });
+      }
+
+      
+      const updatedDocument = result.value || result;
+
+      return res.status(200).json({
+        success: true,
+        message: "Job updated successfully",
+        data: updatedDocument,
+      });
+
+    } catch (error) {
+      console.error("Error updating job:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update job post",
+        error: error.message,
+      });
+    }
+  });
+
     
   router.post("/", async (req, res) => {
     try {
@@ -261,6 +344,62 @@ router.get("/:id", async (req, res) => {
       });
     }
   });
+  router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Check if ID exists and basic string check
+    if (!id || typeof id !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required",
+      });
+    }
+
+    // 2. Exact 24-character hex string validation for BSON ObjectId
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+
+    let query = {};
+    if (isValidObjectId) {
+      query = {
+        $or: [{ _id: new ObjectId(id) }, { _id: id }],
+      };
+    } else {
+      query = { _id: id };
+    }
+
+    // 3. Optional: Authorization / Ownership check (Jodi user verification dorkar hoy)
+    // const userId = req.headers["x-user-id"];
+    // if (userId) {
+    //   query.recruiterId = userId; // Je job-ti delete korbe seta ki tar nijer naki check korte paren
+    // }
+
+    // 4. Delete operation from MongoDB collection
+    const result = await jobsCollection.deleteOne(query);
+
+    // 5. If no document was deleted (Job not found)
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `Job not found with ID: ${id}`,
+      });
+    }
+
+    // 6. Successful Response
+    return res.status(200).json({
+      success: true,
+      message: "Job deleted successfully",
+      data: { deletedId: id },
+    });
+  } catch (error) {
+    console.error("Error deleting job by ID:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete job",
+      error: error.message,
+    });
+  }
+});
 
 
   return router;
