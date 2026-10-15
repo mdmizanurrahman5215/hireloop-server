@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { MongoClient } from 'mongodb';
 import jobsRoutes from './routes/jobs.routes.js';
 import companyRoutes from './routes/company.routes.js';
+import applicationsRoutes from './routes/application.routes.js';
 
 dotenv.config();
 
@@ -25,10 +26,12 @@ async function startServer() {
     const database = client.db("hireloop_db");
     const jobsCollection = database.collection("jobs");
     const companyCollection = database.collection("companies")
+    const applicationsCollection = database.collection("applications");
 
     // 2. Register Routes AFTER database connection is ready
     app.use("/api/jobs", jobsRoutes(jobsCollection));
     app.use("/api/my/companies", companyRoutes(companyCollection));
+    app.use("/api/applications", applicationsRoutes(applicationsCollection));
 
     app.get('/', (req, res) => {
       res.send('Server running successfully');
