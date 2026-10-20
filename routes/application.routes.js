@@ -154,6 +154,44 @@ const applicationsRoutes = (applicationsCollection) => {
     }
   );
 
+  // GET /api/applications/user/:userId
+
+
+router.get("/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Validate MongoDB ObjectId
+    if (!userId || !ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid user ID is required.",
+      });
+    }
+
+    const applications = await applicationsCollection
+      .find({
+        userId: new ObjectId(userId),
+      })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    return res.status(200).json({
+      success: true,
+      message: "Applications fetched successfully.",
+      total: applications.length,
+      applications,
+    });
+  } catch (error) {
+    console.error("Error fetching user applications:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch applications.",
+    });
+  }
+});
+
   return router;
 };
 
