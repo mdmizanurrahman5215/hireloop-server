@@ -32,12 +32,13 @@ async function startServer() {
     const planCollection = database.collection("plans");
     const subscriptionCollection = database.collection("subscriptions");
     const userCollection = database.collection("user");
+    const sessionsCollection = database.collection("session");
 
     // 2. Register Routes AFTER database connection is ready
-    app.use("/api/jobs", jobsRoutes(jobsCollection));
-    app.use("/api/my/companies", companyRoutes(companyCollection));
-    app.use("/api/applications", applicationsRoutes(applicationsCollection));
-    app.use("/api/plans", planRoutes(planCollection));
+    app.use("/api/jobs", jobsRoutes({jobsCollection,sessionsCollection,userCollection}));
+    app.use("/api/companies", companyRoutes(companyCollection,userCollection,sessionsCollection));
+    app.use("/api/applications", applicationsRoutes(applicationsCollection,userCollection));
+    app.use("/api/plans", planRoutes(planCollection,userCollection));
     app.use("/api/subscriptions", subscriptionRoutes(subscriptionCollection,userCollection));
 
     app.get('/', (req, res) => {

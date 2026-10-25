@@ -3,6 +3,7 @@ const { ObjectId } = require("mongodb");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { createAuthMiddleware } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -39,6 +40,8 @@ const upload = multer({
     files: 2,
   },
 });
+
+// const withAuth = createAuthMiddleware(auth);
 
 const applicationsRoutes = (applicationsCollection) => {
   // POST /api/applications

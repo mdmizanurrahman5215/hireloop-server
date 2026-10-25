@@ -1,11 +1,14 @@
 const express = require("express");
 const { ObjectId } = require("mongodb");
+const { createAuthMiddleware, verifyToken } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-const jobsRoutes = (jobsCollection) => {
+// const withAuth = createAuthMiddleware(auth);
 
-router.get("/", async (req, res) => {
+const jobsRoutes = ({jobsCollection, sessionsCollection}) => {
+
+router.get("/",verifyToken(sessionsCollection), async (req, res) => {
   try {
     const {
       companyId,
