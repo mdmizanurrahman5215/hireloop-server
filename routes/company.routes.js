@@ -6,7 +6,7 @@ const { verifyAdmin, verifyRecruiter } = require("../middleware/verifyRole");
 const router = express.Router();
 
 const companyRoutes = (companiesCollection,userCollection,sessionsCollection) => {
-  router.get("/", verifyToken(sessionsCollection),verifyAdmin(userCollection), async (req, res) => {
+  router.get("/", verifyToken(sessionsCollection),verifyRecruiter(userCollection), async (req, res) => {
     try {
       const { category, status, userId } = req.query;
 
@@ -51,7 +51,7 @@ const companyRoutes = (companiesCollection,userCollection,sessionsCollection) =>
   });
 
   // GET /:id - Fetch a single company by ID
-  router.get("/:id", async (req, res) => {
+  router.get("/:id", verifyToken(sessionsCollection),verifyRecruiter(userCollection),async (req, res) => {
     try {
       const { id } = req.params;
 
@@ -82,7 +82,7 @@ const companyRoutes = (companiesCollection,userCollection,sessionsCollection) =>
     }
   });
 
-  router.patch("/:id", async (req, res) => {
+  router.patch("/:id", verifyToken(sessionsCollection),verifyRecruiter(userCollection),async (req, res) => {
   try {
     console.log({req});
     
@@ -138,7 +138,7 @@ const companyRoutes = (companiesCollection,userCollection,sessionsCollection) =>
 });
 
   // POST / - Register a new company
-  router.post("/", async (req, res) => {
+  router.post("/",verifyToken(sessionsCollection), async (req, res) => {
     try {
       const {
         name,

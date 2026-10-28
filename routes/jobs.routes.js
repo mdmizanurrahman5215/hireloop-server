@@ -1,14 +1,15 @@
 const express = require("express");
 const { ObjectId } = require("mongodb");
 const { createAuthMiddleware, verifyToken } = require("../middleware/authMiddleware");
+const { verifyRecruiter } = require("../middleware/verifyRole");
 
 const router = express.Router();
 
 // const withAuth = createAuthMiddleware(auth);
 
-const jobsRoutes = ({jobsCollection, sessionsCollection}) => {
+const jobsRoutes = ({jobsCollection, sessionsCollection,userCollection}) => {
 
-router.get("/",verifyToken(sessionsCollection), async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const {
       companyId,
@@ -207,7 +208,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id",verifyToken(sessionsCollection),verifyRecruiter(userCollection), async (req, res) => {
     try {
       const jobId = req.params.id;
       const payload = req.body;
@@ -291,7 +292,7 @@ router.put("/:id", async (req, res) => {
   });
 
     
-  router.post("/", async (req, res) => {
+  router.post("/",verifyToken(sessionsCollection),verifyRecruiter(userCollection), async (req, res) => {
     try {
       const payload = req.body;
 
@@ -347,7 +348,7 @@ router.put("/:id", async (req, res) => {
       });
     }
   });
-  router.delete("/:id", async (req, res) => {
+  router.delete("/:id",verifyToken(sessionsCollection),verifyRecruiter(userCollection), async (req, res) => {
   try {
     const { id } = req.params;
 
