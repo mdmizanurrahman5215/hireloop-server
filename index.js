@@ -7,6 +7,7 @@ import companyRoutes from './routes/company.routes.js';
 import applicationsRoutes from './routes/application.routes.js';
 import planRoutes from './routes/planRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
+import savedJobsRoutes from './routes/savedJobsRoute.js';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ async function startServer() {
     const subscriptionCollection = database.collection("subscriptions");
     const userCollection = database.collection("user");
     const sessionsCollection = database.collection("session");
+    const savedJobsCollection = database.collection("savedJobs");
 
     // 2. Register Routes AFTER database connection is ready
     app.use("/api/jobs", jobsRoutes({jobsCollection,sessionsCollection,userCollection}));
@@ -40,6 +42,7 @@ async function startServer() {
     app.use("/api/applications", applicationsRoutes(applicationsCollection,userCollection));
     app.use("/api/plans", planRoutes(planCollection,userCollection));
     app.use("/api/subscriptions", subscriptionRoutes(subscriptionCollection,userCollection));
+    app.use("/api/savedJobs", savedJobsRoutes({savedJobsCollection,userCollection,jobsCollection,sessionsCollection}));
 
     app.get('/', (req, res) => {
       res.send('Server running successfully');
