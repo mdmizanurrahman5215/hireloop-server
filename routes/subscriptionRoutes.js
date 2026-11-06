@@ -101,6 +101,65 @@ const subscriptionRoutes = (subscriptionCollection, userCollection) => {
     }
   });
 
+  router.get("/user/:userId", async (req, res) => {
+    try {
+      const userId = req.params?.userId?.trim();
+
+      console.log("Fetching subscription for user:", userId);
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: "User ID is required.",
+        });
+      }
+
+      // Find the latest subscription for this user
+      const subscription = await subscriptionCollection.findOne(
+        {
+          userId,
+          userType: "jobseeker",
+        },
+        {
+          sort: {
+            updatedAt: -1,
+            startDate: -1,
+          },
+          projection: {
+            stripeCustomerId: 0,
+            stripeSubscriptionId: 0,
+          },
+        }
+      );
+ 
+      if (!subscription) {
+        return res.status(404).json({
+          success: false,
+          message: "No subscription found for this user.",
+          subscription: null,
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Subscription retrieved successfully.",
+        subscription,
+      });
+
+    } catch (error) {
+      console.error(
+        "Get subscription by user error:",
+        error?.message || error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to retrieve subscription.",
+      });
+    }
+  });
+
+
   return router;
 };
 

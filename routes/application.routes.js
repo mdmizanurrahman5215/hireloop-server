@@ -164,6 +164,7 @@ router.get("/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
 
+
     // Validate MongoDB ObjectId
     if (!userId || !ObjectId.isValid(userId)) {
       return res.status(400).json({
@@ -173,10 +174,97 @@ router.get("/:userId", async (req, res) => {
     }
 
     const applications = await applicationsCollection
-      .find({
-        userId: new ObjectId(userId),
-      })
-      .sort({ createdAt: -1 })
+      .aggregate([
+        // Match user's applications
+        {
+          $match: {
+            userId: new ObjectId(userId),
+          },
+        },
+
+        // Sort by latest application
+        {
+          $sort: {
+            createdAt: -1,
+          },
+        },
+
+        // Get related job information
+        {
+          $lookup: {
+            from: "jobs",
+            localField: "jobId",
+            foreignField: "_id",
+            as: "job",
+          },
+        },
+
+        // Convert job array into object
+        {
+          $unwind: {
+            path: "$job",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+
+        // Get related company information
+        {
+          $lookup: {
+            from: "companies",
+            localField: "companyId",
+            foreignField: "_id",
+            as: "company",
+          },
+        },
+
+        // Convert company array into object
+        {
+          $unwind: {
+            path: "$company",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+
+        // Return required fields
+        {
+          $project: {
+            _id: 1,
+            userId: 1,
+            jobId: 1,
+            companyId: 1,
+
+            fullName: 1,
+            email: 1,
+            phone: 1,
+            portfolio: 1,
+            coverLetter: 1,
+            experience: 1,
+            resumeUrl: 1,
+            experienceUrl: 1,
+
+            status: 1,
+            createdAt: 1,
+            updatedAt: 1,
+
+            // Job information
+            job: {
+              _id: "$job._id",
+              title: "$job.title",
+              jobType: "$job.jobType",
+              location: "$job.location",
+              category: "$job.category",
+              salary: "$job.salary",
+            },
+
+            // Company information
+            company: {
+              _id: "$company._id",
+              name: "$company.name",
+              logo: "$company.logo",
+            },
+          },
+        },
+      ])
       .toArray();
 
     return res.status(200).json({
@@ -194,6 +282,7 @@ router.get("/:userId", async (req, res) => {
     });
   }
 });
+
 
   return router;
 };
