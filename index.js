@@ -8,7 +8,9 @@ import applicationsRoutes from './routes/application.routes.js';
 import planRoutes from './routes/planRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import savedJobsRoutes from './routes/savedJobsRoute.js';
+import dns from "node:dns";
 
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 dotenv.config();
 
 const app = express();
@@ -35,6 +37,8 @@ async function startServer() {
     const userCollection = database.collection("user");
     const sessionsCollection = database.collection("session");
     const savedJobsCollection = database.collection("savedJobs");
+
+    console.log({sessionsCollection})
 
     // 2. Register Routes AFTER database connection is ready
     app.use("/api/jobs", jobsRoutes({jobsCollection,sessionsCollection,userCollection}));

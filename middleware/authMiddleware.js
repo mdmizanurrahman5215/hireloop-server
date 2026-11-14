@@ -73,6 +73,7 @@
 // module.exports = { createAuthMiddleware };]
 
 const verifyToken = (sessionsCollection) => {
+  console.log("Sessions Collection:", sessionsCollection);
   return async (req, res, next) => {
     try {
       const authHeader = req.headers.authorization;

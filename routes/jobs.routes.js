@@ -8,8 +8,9 @@ const router = express.Router();
 // const withAuth = createAuthMiddleware(auth);
 
 const jobsRoutes = ({jobsCollection, sessionsCollection,userCollection}) => {
+  console.log({sessionsCollection})
 
-router.get("/", async (req, res) => {
+router.get("/",verifyToken(sessionsCollection), async (req, res) => {
   try {
     const {
       companyId,
